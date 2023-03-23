@@ -20,26 +20,12 @@ end test;
 
 architecture behavior of test is
 
-    --This are the components of the testbench
-    component behavioral
-        port( A : in STD_LOGIC;
-              B : in STD_LOGIC;
-              C : in STD_LOGIC;
-              Fout : out STD_LOGIC);
-    end component;
-
-    component structural
-        port( A : in STD_LOGIC;
-              B : in STD_LOGIC;
-              C : in STD_LOGIC;
-              Fout : out STD_LOGIC);
-    end component;
-
-    component dataFlow
-        port( A : in STD_LOGIC;
-              B : in STD_LOGIC;
-              C : in STD_LOGIC;
-              Fout : out STD_LOGIC);
+    --This is the components of the testbench
+    component completeAssembly
+        port( ABCinput : in STD_LOGIC_VECTOR(2 downto 0);
+              Fbehavioral : out STD_LOGIC;
+              FdataFlow : out STD_LOGIC;
+              Fstructural : out STD_LOGIC);
     end component;
 
     --This are the signals of the testbench
@@ -67,24 +53,11 @@ architecture behavior of test is
 
     begin
         --Instance of the three components
-        uut_behavioral : behavioral port map(
-            A => ABCinput(2),
-            B => ABCinput(1),
-            C => ABCinput(0),
-            Fout => Fbehavioral);
-
-        uut_structural : structural port map(
-            A => ABCinput(2),
-            B => ABCinput(1),
-            C => ABCinput(0),
-            Fout => Fstructural);
-
-        uut_dataFlow : dataFlow port map(
-            A => ABCinput(2),
-            B => ABCinput(1),
-            C => ABCinput(0),
-            Fout => FdataFlow);
-        
+        uut_completeAssembly : completeAssembly port map(
+            ABCinput => ABCinput,
+            Fbehavioral => Fbehavioral,
+            FdataFlow => FdataFlow,
+            Fstructural => Fstructural);
         --This part generates the expected output
         expectedOutput(ABCinput,Fexpected);
         
