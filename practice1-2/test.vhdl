@@ -25,7 +25,9 @@ architecture behavior of test is
         port( ABCinput : in STD_LOGIC_VECTOR(2 downto 0);
               Fbehavioral : out STD_LOGIC;
               FdataFlow : out STD_LOGIC;
-              Fstructural : out STD_LOGIC);
+              Fstructural : out STD_LOGIC;
+              displayOut : out STD_LOGIC_VECTOR(6 downto 0);
+              displayActive : out STD_LOGIC_VECTOR(3 downto 0));
     end component;
 
     --This are the signals of the testbench

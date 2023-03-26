@@ -14,7 +14,9 @@ entity completeAssembly is
     Port ( ABCinput : in STD_LOGIC_VECTOR(2 downto 0);
            Fbehavioral : out STD_LOGIC;
            FdataFlow : out STD_LOGIC;
-           Fstructural : out STD_LOGIC);
+           Fstructural : out STD_LOGIC;
+           displayOut : out STD_LOGIC_VECTOR(6 downto 0);
+           displayActive : out STD_LOGIC_VECTOR(3 downto 0));
 end completeAssembly;
 
 architecture Behavioral of completeAssembly is
@@ -23,7 +25,7 @@ architecture Behavioral of completeAssembly is
     component behavioral
         Port ( A : in STD_LOGIC;
                B : in STD_LOGIC;
-               C : in STD_LOGIC; 
+               C : in STD_LOGIC;
                Fout : out STD_LOGIC);
     end component;
 
@@ -40,8 +42,20 @@ architecture Behavioral of completeAssembly is
                C : in STD_LOGIC;
                Fout : out STD_LOGIC);
     end component;
-
+    
+    component decoHex
+        Port ( binaryIn : in STD_LOGIC_VECTOR (3 downto 0);
+               displayOut : out STD_LOGIC_VECTOR (6 downto 0));
+    end component;
+    
+    signal ABCinput2 : STD_LOGIC_VECTOR (3 downto 0);
 begin
+    --THis is input for display
+    ABCinput2 <= "0" & ABCinput;
+    --Position of display activation
+    displayActive <= "1110";
+    
+    --Instance of components
     behavioral1 : behavioral
         Port map (A => ABCinput(2), B => ABCinput(1), C => ABCinput(0), Fout => Fbehavioral);
 
@@ -50,5 +64,8 @@ begin
 
     structural1 : structural
         Port map (A => ABCinput(2), B => ABCinput(1), C => ABCinput(0), Fout => Fstructural);
+        
+    decoHex1 : decoHex
+        Port map (binaryIn => ABCinput2, displayOut => displayOut);
 
 end Behavioral;
