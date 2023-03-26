@@ -1,6 +1,18 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
+--========================================================================
+--This code in VHDL is for implement of a ALU and an 7 segments display with next operation
+-- if operationSelect = "000" then operationOut <= A or B
+-- if operationSelect = "001" then operationOut <= A + B
+-- if operationSelect = "010" then operationOut <= not B
+-- if operationSelect = "011" then operationOut <= A + 2
+-- if operationSelect = "100" then operationOut <= A - 2, but if A < 2 then operationOut <= 0;
+-- if operationSelect = "101" then operationOut <= show an "-" in the display
+-- if operationSelect = "110" then operationOut <= B*2
+-- if operationSelect = "111" then operationOut <= A + B, but if A + B > 24 then operationOut <= 0;
+--========================================================================
+
 entity completeAssembly is
     Port ( A, B : in STD_LOGIC_VECTOR(3 downto 0);
            XYZ : in STD_LOGIC_VECTOR(2 downto 0);
