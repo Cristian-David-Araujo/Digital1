@@ -38,7 +38,7 @@ begin
                      "1000010" when binaryIn = "1101" else
                      "0110000" when binaryIn = "1110" else
                      "0111000" when binaryIn = "1111" else
-                     "1111111";
+                     "1111110";
     
     
 end Behavioral;
