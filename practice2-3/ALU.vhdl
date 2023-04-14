@@ -59,13 +59,15 @@ begin
         elsif (operationSelect = "101") then
             operationOutAux <= "01111";
         elsif (operationSelect = "110") then
-            operationOutAux <= B1 and "00010";
-        else
+            operationOutAux <= B & "0";
+        elsif (operationSelect = "111") then
             if ((A1 +B1) > 24) then
                 operationOutAux <= "00000";
             else
                 operationOutAux <= A1 + B1;
             end if;
+        else
+            operationOutAux <= "00000";
         end if;
     end process;
 end  architecture Behavioral;
