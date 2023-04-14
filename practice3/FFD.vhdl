@@ -11,7 +11,7 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 
---This code implements a register of 4 bits, with a clock and an enable signal.
+--This code implements a register (Flip Flop type D) of 4 bits, with a clock and an enable signal.
 entity FFD is
     Port ( CLK : in STD_LOGIC;
            Data : in STD_LOGIC_VECTOR (3 downto 0);
