@@ -18,11 +18,11 @@ entity MUX2to1 is
 end MUX2to1;
 
 architecture behavioral of MUX2to1 is
-    MUXout_signal : STD_LOGIC_VECTOR (3 downto 0);
+    signal MUXout_signal : STD_LOGIC_VECTOR (3 downto 0);
 begin
     MUXout <= MUXout_signal;
 
-    with MUXout select
-        MUXout_signal <= in0 when '0',
-                         in1 when others;
+    with selection select
+    MUXout_signal <= in0 when '0',
+                     in1 when others;
 end behavioral;

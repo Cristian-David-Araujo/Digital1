@@ -21,7 +21,9 @@ end clkDivider;
 
 architecture hehavioral of clkDivider is
     signal actualCount : integer := 0;
+    signal newClkAux : STD_LOGIC;
 begin
+    newClk <= newClkAux;
     process(clk)
     begin
         if clk'event and clk='1' then
@@ -29,7 +31,7 @@ begin
                 actualCount <= actualCount + 1;
             else
                 actualCount <= 0;
-                newClk <= not newClk;
+                newClkAux <= not newClkAux;
             end if;
         end if;
     end process;

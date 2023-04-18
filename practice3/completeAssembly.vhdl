@@ -14,12 +14,15 @@ use IEEE.STD_LOGIC_1164.ALL;
 --========================================================================
 
 entity completeAssembly is
-    Port ( add_A, add_B : in STD_LOGIC_VECTOR(2 downto 0);
-           FA, FB : in STD_LOGIC;
+    Port ( add_A: in STD_LOGIC_VECTOR(2 downto 0);
+           add_B : in STD_LOGIC_VECTOR(1 downto 0);
+           FA, FB, en0, en1, en2 : in STD_LOGIC;
            sel_ALU : in STD_LOGIC_VECTOR (2 downto 0);
-           en, dataA, dataB : in STD_LOGIC_VECTOR (3 downto 0);
+           dataA, dataB : in STD_LOGIC_VECTOR (3 downto 0);
            clk : in STD_LOGIC;
 
+                      
+           cout : out STD_LOGIC;
            displayOut : out STD_LOGIC_VECTOR(6 downto 0);
            activeDisplay : out STD_LOGIC_VECTOR(3 downto 0));
 end completeAssembly;
@@ -58,7 +61,7 @@ architecture Behavioral of completeAssembly is
     end component;
 
     component driverDisplay is
-        Port (  binaryIn : in STD_LOGIC_VECTOR (13 downto 0);
+        Port (  binaryIn0, binaryIn1, binaryIn2, binaryIn3 : in STD_LOGIC_VECTOR (13 downto 0);
                 clk : in STD_LOGIC;
                 displayActive : out STD_LOGIC_VECTOR (3 downto 0);
                 displayOut : out STD_LOGIC_VECTOR (6 downto 0));
@@ -73,23 +76,33 @@ architecture Behavioral of completeAssembly is
 
     -- Declare an internal signal used in the architecture
     signal outROM_A, outROM_B : STD_LOGIC_VECTOR (3 downto 0);
+    signal inROMB : STD_LOGIC_VECTOR (2 downto 0);
 
     --Declaration of clocks
-    signal clk1ms, clk4ms, clk1s : STD_LOGIC;
+    signal clk1ms, clk4ms, clk20ns : STD_LOGIC;
 
     signal BA, BB, inALU1, inALU2: STD_LOGIC_VECTOR (3 downto 0);
     signal outALU : STD_LOGIC_VECTOR (4 downto 0);
+    signal outALU2 : STD_LOGIC_VECTOR (13 downto 0);
 
 
     signal activeDisplayAux : STD_LOGIC_VECTOR (3 downto 0);
     signal displayOutAux : STD_LOGIC_VECTOR (6 downto 0);
+    
+    signal outFFD3 : STD_LOGIC_VECTOR (3 downto 0);
 
 begin
-    --Instans of clock 
+    --Instans of clock
+    --Clock 20ns
+    clkDivider20ns : clkDivider
+                generic map (countLimit => 1000)
+                Port map (clk => clk,
+                         newClk => clk20ns);
+
     --Clock 1ms
     clkDivider1ms : clkDivider
-                generic map (countLimit => 100000)
-                Port map (clk => clk,
+                generic map (countLimit => 50000)
+                Port map (clk => clk20ns,
                          newClk => clk1ms);
 
     --Clock 4ms
@@ -98,36 +111,37 @@ begin
                 Port map (clk => clk1ms,
                          newClk => clk4ms);
 
-    --Clock 1s
-    clkDivider1s : clkDivider
-                generic map (countLimit => 1000)
-                Port map (clk => clk1ms,
-                         newClk => clk1s);
-
     --Instastion of ROM_A and ROM_B
     ROM_A1 : ROM_A Port map (address => add_A, data => outROM_A);
-    ROM_B1 : ROM_B Port map (address => add_B, data => outROM_B);
+    inROMB <= '0'&add_B;
+    ROM_B1 : ROM_B Port map (address => inROMB, data => outROM_B);
 
 
     MUX2x1_1 : MUX2to1 Port map (in0 => outROM_A, in1 => dataA, selection => FA, MUXout => BA);
-    FFD1 : FFD Port map (CLK => clk1ms, Data => BA, Enable => en0, Q => inALU1);
+    FFD1 : FFD Port map (CLK => clk, Data => BA, Enable => en0, Q => inALU1);
 
 
-    MUX2x1_2 : MUX2to2 Port map (in0 => dataB, in1 => outROM_B, selection => FB, MUXout => BB);
-    FFD2 : FFD Port map (CLK => clk1ms, Data => BB, Enable => en1, Q => inALU2);
+    MUX2x1_2 : MUX2to1 Port map (in0 => dataB, in1 => outROM_B, selection => FB, MUXout => BB);
+    FFD2 : FFD Port map (CLK => clk, Data => BB, Enable => en1, Q => inALU2);
 
 
      -- Instantiate component "ALU" and assign values to its input and output ports
     ALU1 : ALU Port map (A => inALU1, B => inALU2, operationSelect => sel_ALU, operationOut => outALU(3 downto 0), Cout => outALU(4));
-    FFD3 : FFD Port map (CLK => clk1ms, Data => outALU(3 downto 0), Enable => en2, Q => outALU(3 downto 0));
+    FFD3 : FFD Port map (CLK => clk, Data => outALU(3 downto 0), Enable => en2, Q => outFFD3);
+    cout <= outALU(4);
 
-    
- 
     -- Instantiate component "decoHEX" and assign values to its input and output ports
-    driverDisplay1 : driverDisplay Port map (binaryIn => "0000000000"&outALU, clk => clk4ms, displayActive => activeDisplay, displayOut => displayOutAux);
+    driverDisplay1 : driverDisplay Port map (binaryIn0 => operationSelect,
+                                             binaryIn1 => outALU1,
+                                             binaryIn2 => outALU2,
+                                             binaryIn3 => outFFD3,
+                                             clk => clk4ms,
+                                             displayActive => activeDisplayAux,
+                                             displayOut => displayOutAux);
+    
     -- Select the display to be active
     --- Assign a constant value to output port "alternativeDisplay" for show the caracter "-" in the display
-    displayOut <= "1111110" when XYZ = "101" else displayOutAux;
-    activeDisplay <= "0000" when XYZ = "101" else activeDisplayAux;
+    displayOut <= "1111110" when sel_ALU = "101" else displayOutAux;
+    activeDisplay <= "0000" when sel_ALU = "101" else activeDisplayAux;
 
 end Behavioral;
