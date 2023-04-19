@@ -33,7 +33,7 @@ architecture Behavioral of driverDisplay is
 
     signal displayPosition : STD_LOGIC_VECTOR (1 downto 0);
     signal displayIn : STD_LOGIC_VECTOR (3 downto 0);
-    --signal displayActiveAux : STD_LOGIC_VECTOR (3 downto 0);
+    signal displayOutAux : STD_LOGIC_VECTOR (6 downto 0);
 
 begin
 
@@ -57,6 +57,10 @@ begin
                   binaryIn2 when (displayPosition = "01") else
                   binaryIn1 when (displayPosition = "10") else
                   binaryIn0;
-                  
-    decoDisplay1: decoDisplay port map (binaryIn  => displayIn, displayOut => displayOut);
+                       
+          
+    decoDisplay1: decoDisplay port map (binaryIn  => displayIn, displayOut => displayOutAux);
+     -- Select the display to be active
+    --- Assign a constant value to output port "alternativeDisplay" for show the caracter "-" in the display
+    displayOut <= "1111110" when (binaryIn0 = "0101" and displayPosition = "00") else displayOutAux;
 end Behavioral;

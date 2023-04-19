@@ -1,6 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_SIGNED.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
@@ -22,52 +22,52 @@ use IEEE.NUMERIC_STD.ALL;
 -- if operationSelect = "110" then operationOut <= B*2
 -- if operationSelect = "111" then operationOut <= A + B, but if A + B > 24 then operationOut <= 0;
 --========================================================================
+
 entity ALU is
-    Port (  A, B : in STD_LOGIC_VECTOR (3 downto 0);
-            operationSelect : in STD_LOGIC_VECTOR (2 downto 0);
-            operationOut : out STD_LOGIC_VECTOR (3 downto 0);
-            Cout : out STD_LOGIC
-    );
+    Port ( A : in std_logic_vector(3 downto 0);
+           B : in std_logic_vector(3 downto 0);
+           opcode : in std_logic_vector(2 downto 0);
+           S : out std_logic_vector(3 downto 0);
+           CarryOut : out STD_LOGIC
+           );
 end ALU;
 
 architecture Behavioral of ALU is
-    signal operationOutAux : STD_LOGIC_VECTOR (4 downto 0); -- An auxiliary signal of 5 bits width.
-    signal A1, B1 : STD_LOGIC_VECTOR (4 downto 0);  -- Signals of 5 bits width to hold input signals extended by one bit.
+    signal ALUout : std_logic_vector(4 downto 0);
+
 begin
-    operationOut <= operationOutAux(3 downto 0);
-    Cout <= operationOutAux(4);
-
-    A1 <= "0" & A;
-    B1 <= "0" & B;
-
-    process (A1, B1, operationSelect)
+    process(A, B, opcode)
     begin
-        if (operationSelect = "000") then
-            operationOutAux <= "0" & (A or B);
-        elsif (operationSelect = "001") then
-            operationOutAux <= A1 + B1;
-        elsif (operationSelect = "010") then
-            operationOutAux <= "0" & (not B);
-        elsif (operationSelect = "011") then
-            operationOutAux <= A1 + 2;
-        elsif (operationSelect = "100") then
-            if (A1 < "00010") then
-                operationOutAux <= "00000";
-            else
-                operationOutAux <= A1 - "00010";
-            end if;
-        elsif (operationSelect = "101") then
-            operationOutAux <= "01111";
-        elsif (operationSelect = "110") then
-            operationOutAux <= B & "0";
-        elsif (operationSelect = "111") then
-            if ((A1 + B1) > 24) then
-                operationOutAux <= "00000";
-            else
-                operationOutAux <= A1 + B1;
-            end if;
-        else
-            operationOutAux <= "00000";
-        end if;
+        case opcode is
+            when "000" => -- OR operation
+                ALUout <= "0" & (A or B);
+            when "001" => -- ADD operation
+                ALUout <= ("0" &  A) + ("0" & B);
+            when "010" => -- NOT operation
+                ALUout <= "0" & not B;
+            when "011" => -- ADD 2 operation   
+                ALUout <= "0" & A + 2;
+            when "100" => -- SUB 2 operation
+                if A < "0010" then
+                    ALUout <= "00000";
+                else
+                    ALUout <= "0" & A - 2;
+                end if;
+            when "101" => -- SET operation
+                ALUout <= "01111";
+            when "110" => -- MUL by 2 operation
+                ALUout <= B & "0";
+            when "111" => -- ADD and check for overflow operation
+                if ("0" &  A) + ("0" & B) > "11000" then
+                    ALUout <= "10100";
+                else
+                    ALUout <=("0" &  A) + ("0" & B);
+                end if;
+            when others => -- default operation
+                ALUout <= "00000";
+        end case;
     end process;
-end  architecture Behavioral;
+
+    S <= ALUout(3 downto 0);
+    CarryOut <= ALUout(4);
+end Behavioral;
