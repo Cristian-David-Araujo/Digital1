@@ -62,7 +62,8 @@ architecture Behavioral of completeAssembly is
     end component;
 
     component driverDisplay is
-        Port (  binaryIn0, binaryIn1, binaryIn2, binaryIn3 : in STD_LOGIC_VECTOR (3 downto 0);
+        Port (  binaryIn0, binaryIn1, binaryIn2 : in STD_LOGIC_VECTOR (3 downto 0);
+                binaryIn3 : in STD_LOGIC_VECTOR (4 downto 0);
                 clk : in STD_LOGIC;
                 displayActive : out STD_LOGIC_VECTOR (3 downto 0);
                 displayOut : out STD_LOGIC_VECTOR (6 downto 0));
@@ -86,7 +87,7 @@ architecture Behavioral of completeAssembly is
     signal sel_ALUAux : STD_LOGIC_VECTOR (3 downto 0);
     signal outALU : STD_LOGIC_VECTOR (4 downto 0);
     
-    signal outFFD3 : STD_LOGIC_VECTOR (3 downto 0);
+    signal outFFD3 : STD_LOGIC_VECTOR (4 downto 0);
 
 begin
     --Instans of clock
@@ -102,28 +103,49 @@ begin
                 Port map (clk => clk20ns,
                          newClk => clk1ms);
 
-    --Instastion of ROM_A and ROM_B
+    --Instantiation of the ROM memories ROM_A and ROM_B
     ROM_A1 : ROM_A Port map (address => add_A, data => outROM_A);
     inROMB <= '0'&add_B;
     ROM_B1 : ROM_B Port map (address => inROMB, data => outROM_B);
 
-
+    --Selection of information to be stored in the flip-flop.
     MUX2x1_1 : MUX2to1 Port map (in0 => outROM_A, in1 => dataA, selection => FA, MUXout => BA);
-    FFD1 : FFD Port map (CLK => clk, Data => BA, Enable => en0, Q => inALU1);
+    FFD1 : FFD Port map (CLK => clk20ns, Data => BA, Enable => en0, Q => inALU1);
 
-
+    --Selection of information to be stored in the flip-flop.
     MUX2x1_2 : MUX2to1 Port map (in0 => dataB, in1 => outROM_B, selection => FB, MUXout => BB);
-    FFD2 : FFD Port map (CLK => clk, Data => BB, Enable => en1, Q => inALU2);
+    FFD2 : FFD Port map (CLK => clk20ns, Data => BB, Enable => en1, Q => inALU2);
 
 
      -- Instantiate component "ALU" and assign values to its input and output ports
     ALU1 : ALU Port map (A => inALU1, B => inALU2, opcode => sel_ALU, S => outALU(3 downto 0), CarryOut => outALU(4));
-    FFD3 : FFD Port map (CLK => clk, Data => outALU(3 downto 0), Enable => en2, Q => outFFD3);
+
+    --FlipFlop 3 with 5 inputs
+    --This part of the code is analogous to a D-type Flip-Flop or 5-bit register,
+    --with an additional condition where sel_ALU is used so that when it is "101"
+    --the display driver can show a "-" on the display.
+    process(clk20ns)
+    begin
+        if clk20ns'event and clk20ns = '1' then
+            if en2 = '1' then
+                if sel_ALU = "101" then
+                    outFFD3 <= "1" &  outALU(3 downto 0);
+                else
+                    outFFD3 <= "0" &  outALU(3 downto 0);
+                end if;
+            end if;
+        end if;
+    end process;
+    --FFD3 : FFD Port map (CLK => clk, Data => outALU(3 downto 0), Enable => en2, Q => outFFD3);
     cout <= outALU(4);
     
     sel_ALUAux <= '0'&sel_ALU;
 
-    -- Instantiate component "decoHEX" and assign values to its input and output ports
+    --In this part of the code, the information to be displayed on the four displays is sent,
+    --where each display is assigned different information. From left to right on the displays,
+    --the first display shows the selected operation in the ALU, the second display shows the information
+    --stored in the first flip-flop, the third display shows the information stored in the second flip-flop,
+    --and finally, the output of the ALU is displayed on the fourth display.
     driverDisplay1 : driverDisplay Port map (binaryIn0 => sel_ALUAux,
                                              binaryIn1 => inALU1,
                                              binaryIn2 => inALU2,

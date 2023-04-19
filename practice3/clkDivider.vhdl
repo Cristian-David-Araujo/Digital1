@@ -11,11 +11,15 @@ use IEEE.NUMERIC_STD.ALL;
 --library UNISIM;
 --use UNISIM.VComponents.all;
 
+
+--This code is an implementation of a clock divider circuit in VHDL.
+--It takes an input clock signal (clk) and produces an output 
+--clock signal (newClk) with a frequency equal to countLimit/frecuency(clk).
 entity clkDivider is
     generic(
         countLimit : integer := 100000000
     );
-    Port ( clk : in std_logic; --Clk 100MHz
+    Port ( clk : in std_logic;
            newClk : out std_logic);
 end clkDivider;
 
