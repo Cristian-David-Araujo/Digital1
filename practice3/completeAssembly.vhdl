@@ -21,7 +21,7 @@ entity completeAssembly is
            dataA, dataB : in STD_LOGIC_VECTOR (3 downto 0);
            clk : in STD_LOGIC;
 
-                      
+           TotalOut : out STD_LOGIC_VECTOR (5 downto 0);
            cout : out STD_LOGIC;
            displayOut : out STD_LOGIC_VECTOR(6 downto 0);
            activeDisplay : out STD_LOGIC_VECTOR(3 downto 0));
@@ -138,6 +138,8 @@ begin
     end process;
     --FFD3 : FFD Port map (CLK => clk, Data => outALU(3 downto 0), Enable => en2, Q => outFFD3);
     cout <= outALU(4);
+
+    totalOut = Cout & outFFD3;
     
     sel_ALUAux <= '0'&sel_ALU;
 
