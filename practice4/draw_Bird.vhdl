@@ -1,105 +1,37 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_SIGNED.ALL;
 
-entity draw_Bird is
-    Port ( clk : in  STD_LOGIC;
-           posX : in  STD_LOGIC_VECTOR (10 downto 0);
-           posY : in  STD_LOGIC_VECTOR (10 downto 0);
-           Hcount : in  STD_LOGIC_VECTOR (10 downto 0);
-           Vcount : in  STD_LOGIC_VECTOR (10 downto 0);
-           draw : out  STD_LOGIC);
-end draw_Bird;
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+use IEEE.NUMERIC_STD.ALL;
 
-architecture Behavioral of draw_Bird is
 
-    component ROM_Bird1 is
-    port(
-        address : in STD_LOGIC_VECTOR (3 downto 0);
-        data : out STD_LOGIC_VECTOR (15 downto 0)
+--This code is an implementation of a clock divider circuit in VHDL.
+--It takes an input clock signal (clk) and produces an output 
+--clock signal (newClk) with a frequency equal to countLimit/frecuency(clk).
+entity clkDivider is
+    generic(
+        countLimit : integer := 100000000
     );
-    end component;
+    Port ( clk : in std_logic;
+           newClk : out std_logic);
+end clkDivider;
 
-    component ROM_Bird2 is
-    port(
-        address : in STD_LOGIC_VECTOR (3 downto 0);
-        data : out STD_LOGIC_VECTOR (15 downto 0)
-    );
-    end component;
-
-    component ROM_Bird3 is
-    port(
-        address : in STD_LOGIC_VECTOR (3 downto 0);
-        data : out STD_LOGIC_VECTOR (15 downto 0)
-    );
-    end component;
-
-    component clkDivider is
-    generic (countLimit : integer);
-    port (
-        clk : in STD_LOGIC;
-        newClk : out STD_LOGIC
-    );
-    end component clkDivider;
-
-    --Declaration of clocks
-    signal clk50ms : STD_LOGIC;
-
-    signal frame : STD_LOGIC_VECTOR (1 downto 0);
-    
-    signal addressX_aux, addressY_aux : STD_LOGIC_VECTOR (10 downto 0);
-    signal addressX, addressY : STD_LOGIC_VECTOR (3 downto 0);
-    signal dataROM1, dataROM2, dataROM3, data : STD_LOGIC_VECTOR (15 downto 0);
+architecture hehavioral of clkDivider is
+    signal actualCount : integer := 0;
+    signal newClkAux : STD_LOGIC;
 begin
-
-    --Instans of clock
-    --Clock 50ms
-    clkDivider50ms : clkDivider
-                generic map (countLimit => 25000000)
-                Port map (clk => clk,
-                         newClk => clk50ms);
-
-    --Instans of ROMs
-    ROM_Bird1 : ROM_Bird1
-    port map(
-        address => addressY,
-        data => dataROM1
-    );
-
-    ROM_Bird2 : ROM_Bird2
-    port map(
-        address => addressY,
-        data => dataROM2
-    );
-
-    ROM_Bird3 : ROM_Bird3
-    port map(
-        address => addressY,
-        data => dataROM3
-    );
-
-    --Count for multiplex the frame of bird
-    process(clk50ms)
+    newClk <= newClkAux;
+    process(clk)
     begin
-        if clk50ms'event and clk50ms = '1' then
-            if frame = "10" then
-                frame <= "00";
+        if clk'event and clk='1' then
+            if actualCount < (countLimit - 1) then
+                actualCount <= actualCount + 1;
             else
-                frame <= frame + 1;
-            end if;            
+                actualCount <= 0;
+                newClkAux <= not newClkAux;
+            end if;
         end if;
     end process;
-
-    addressY_aux <= Vcount - posY;
-    addressY <= addressY_aux(3 downto 0);
-    addressX_aux <= Vcount - posX;
-    addressX <= addressX_aux(3 downto 0);
-
-    data <= dataROM1 when frame = "00" else
-            dataROM2 when frame = "01" else
-            dataROM3 when others;
-    
-    draw <= data(to_integer(unsigned(addressX)));
-    
-end Behavioral;
+end hehavioral;
